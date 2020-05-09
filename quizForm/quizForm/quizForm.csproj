@@ -109,6 +109,7 @@
     <Compile Include="SubtractionEqualForm.Designer.cs">
       <DependentUpon>SubtractionEqualForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tool.cs" />
     <EmbeddedResource Include="AdditionForm.resx">
       <DependentUpon>AdditionForm.cs</DependentUpon>
     </EmbeddedResource>

@@ -13,16 +13,9 @@ namespace quizForm
 {
     public partial class GeneralizationForm : Form
     {
-        private SqlConnection connection = new SqlConnection(@"Data Source = (LocalDB)\MSSQLLocalDB; AttachDbFilename=E:\winforms\quizForm\quizForm\TryOut.mdf;Integrated Security = True");
-
-        private SqlCommand sqlCommand;
-        private SqlDataReader dataReader;
-
-        private String sql = "";
-
         private String tableName = "Generalization";
         private int activeAnswer = 0;
-        private int questionIndex;
+        private int questionId;
 
         public GeneralizationForm()
         {
@@ -32,90 +25,30 @@ namespace quizForm
         private void GeneralizationForm_Activated(object sender, EventArgs e)
         {
             label_anounce.Text = "Зроби свій вибір =) ";
-            questionIndex = GenerationOfQuestionIndex();
+            questionId = Tool.ChooseIDForQuestion(tableName);
 
-            FillTextBoxQuestion(questionIndex);
-            FillButtonsAnswers(questionIndex);
+            FillTextBoxQuestion(questionId, tableName, textBox_question);
+            FillButtonsAnswers(questionId, tableName, btn_answer1, btn_answer2, btn_answer3, btn_answer4);
         }
 
         #region Logic: Choose question for quiz & change status of question 
 
-        private int GenerationOfQuestionIndex()
+        public static void FillTextBoxQuestion(int questionId, String tableName, TextBox textBoxQuestion)
         {
-            Random generationNumber = new Random();
-            List<int> indexes = new List<int>();
-
-            sql = "SELECT Id FROM [" + tableName + "] WHERE Status!=1";
-            sqlCommand = new SqlCommand(sql, connection);
-
-            connection.Open();
-            dataReader = sqlCommand.ExecuteReader();
-
-            while (dataReader.Read())
-            {
-                String parseToInt = dataReader.GetValue(0).ToString();
-                indexes.Add(Int32.Parse(parseToInt));//add to list all questions which has Status = 0
-            }
-            connection.Close();
-
-            int questionIndex = generationNumber.Next(indexes.Count());
-            int questionId = indexes.ElementAt(questionIndex);
-
-            return questionId;
+            DBManager.TakeQuestionFromDB(questionId, tableName, textBoxQuestion);
         }
 
-        private void FillTextBoxQuestion(int index)
+        public static void FillButtonsAnswers(int questionId, String tableName, Button button1, Button button2, Button button3, Button button4)
         {
-            sql = "SELECT Question FROM [" + tableName + "] WHERE Id=" + index;
-            sqlCommand = new SqlCommand(sql, connection);
-
-            connection.Open();
-            dataReader = sqlCommand.ExecuteReader();
-            while (dataReader.Read())
-            {
-                textBox_question.Text = dataReader.GetValue(0).ToString();
-            }
-            connection.Close();
+            DBManager.TakeAnswersFromDB(questionId, tableName, button1, button2, button3, button4);
         }
-
-        private void FillButtonsAnswers(int index)
-        {
-            sql = "SELECT Answer1,Answer2,Answer3,Answer4 FROM [" + tableName + "] WHERE Id=" + index;
-            sqlCommand = new SqlCommand(sql, connection);
-
-            connection.Open();
-            dataReader = sqlCommand.ExecuteReader();
-            while (dataReader.Read())
-            {
-                btn_answer1.Text = dataReader.GetValue(0).ToString();
-                btn_answer2.Text = dataReader.GetValue(1).ToString();
-                btn_answer3.Text = dataReader.GetValue(2).ToString();
-                btn_answer4.Text = dataReader.GetValue(3).ToString();
-            }
-            connection.Close();
-        }
-
-        private void DisableQuestion(int index)
-        {
-
-            sql = "UPDATE [" + tableName + "] SET Status=1 WHERE Id=" + index;
-            //sql = "UPDATE [" + tableName + "] SET Status=1 WHERE Id=" + index+"";
-            sqlCommand = new SqlCommand(sql, connection);
-            connection.Open();
-            sqlCommand.ExecuteReader();
-
-            connection.Close();
-
-        }//change the status of the question so that in the future it does not appear
-
 
         #endregion
 
-        #region Button-Logic
+        #region Button-clickers 
 
         private void btn_continue_Click(object sender, EventArgs e)
         {
-            
             if (activeAnswer == 0)
             {
                 label_anounce.Text = "Спочатку потрібно вибрати варіант відповіді";
@@ -123,13 +56,14 @@ namespace quizForm
             else
             {
                 label_anounce.Text = "Твоя відповідь прийнята =)";
-                StatisticalAnalyzer.CheckAnswer(tableName, questionIndex, activeAnswer); //correct-or-nonCorrect answer
+                StatisticalAnalyzer.CheckAnswer(tableName, questionId, activeAnswer); //correct-or-nonCorrect answer
                 activeAnswer = 0;
 
-                DisableQuestion(questionIndex); // update status of question
-
-                FormPicker.DempingManager(FormPicker.pickIndex); // update list of tables
-                //call new question
+                // Update status of question
+                DBManager.BlockQuestionSession(questionId, tableName);
+                // Update list of tables
+                FormPicker.DempingManager(FormPicker.pickIndex);
+                // Call new question
                 if (FormPicker.formContainer.Count != 0)
                 {
                     this.Hide();
@@ -168,8 +102,7 @@ namespace quizForm
             activeAnswer = 4;
             label_anounce.Text = "Твоя відповідь: " + btn_answer4.Text;
         }
-        #endregion
 
-       
+        #endregion
     }
 }

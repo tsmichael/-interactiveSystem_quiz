@@ -185,7 +185,7 @@ namespace quizForm
 
         private void actionaction(TextBox tb) {
             tb.Text = "AlohaBitch";
-
+            
         }
     }
 }
