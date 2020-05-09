@@ -4,36 +4,56 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.IO;
 
 namespace quizForm
 {
     class DBManager
     {
-        private static SqlConnection connection = new SqlConnection(@"Data Source = (LocalDB)\MSSQLLocalDB; AttachDbFilename=E:\winforms\quizForm\quizForm\TryOut.mdf;Integrated Security = True");
 
-        private static SqlCommand sqlCommand;
-        private static SqlDataReader dataReader;
+        static String dbPath = Path.Combine(Environment.CurrentDirectory, @"TryOut.mdf"); //path - we need const vars
+        private static readonly String connectionString = @"Data Source = (LocalDB)\MSSQLLocalDB; AttachDbFilename=" + dbPath + ";Integrated Security = True";
 
-        private static String sql = "";
-
-        private const String Addition = "Addition";
+        private const String Addition = "Addition"; // Need to create new final class with constants
         private const String Generalization = "Generalization";
         private const String SubtractionEqual = "SubtractionEqual";
         private const String Compare = "Compare";
 
+        //private void TakeQuestionFromDB(int questionId, String tableName)
+        //{
+        //    connection.Open();
+
+        //    sql = "SELECT Question FROM [" + tableName + "] WHERE Id=" + index;
+        //    sqlCommand = new SqlCommand(sql, connection);
+
+        //    dataReader = sqlCommand.ExecuteReader();
+        //    while (dataReader.Read())
+        //    {
+        //        textBox_question.Text = dataReader.GetValue(0).ToString();
+        //    }
+        //    connection.Close();
+        //}
         public static int TakeTrueFromDB(String tableName, int questionId)
         {
             int correctAnswer = 0;
-            sql = "SELECT True FROM [" + tableName + "] WHERE Id=" + questionId;
-            sqlCommand = new SqlCommand(sql, connection);
-            connection.Open();
-            dataReader = sqlCommand.ExecuteReader();
-            while (dataReader.Read())
+
+            string queryString = "SELECT True FROM [" + tableName + "] WHERE Id=" + questionId;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                String parseToInt = dataReader.GetValue(0).ToString();
-                correctAnswer = Int32.Parse(parseToInt);
+                SqlCommand sqlCommand = new SqlCommand(queryString, connection);
+                connection.Open();
+
+                SqlDataReader dataReader = sqlCommand.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    String parseToInt = dataReader.GetValue(0).ToString();
+                    correctAnswer = Int32.Parse(parseToInt);
+                }
+
+                dataReader.Close();
             }
-            connection.Close();
             return correctAnswer;
         }
 
@@ -47,21 +67,15 @@ namespace quizForm
 
         public static void RestoreStatusInTable(String tableName)
         {
-            connection.Open();
+            string queryString = "UPDATE [" + tableName + "] SET Status=0 WHERE Status=1";
 
-            sql = "UPDATE ["+ tableName +"] SET Status=0 WHERE Status=1";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                SqlCommand sqlCommand = new SqlCommand(queryString, connection);
+                connection.Open();
 
-            sqlCommand = new SqlCommand(sql, connection);
-
-            sqlCommand.ExecuteReader();
-
-            connection.Close();
+                sqlCommand.ExecuteReader();
+            }
         }
-
-        
-
-
-
-
     }
 }

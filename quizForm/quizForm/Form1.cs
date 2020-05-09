@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -173,6 +174,18 @@ namespace quizForm
             //Thread.Sleep(5000);
             //this.Close();
             ////Application.Exit();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            //string path = Path.Combine(Environment.CurrentDirectory, @"TryOut.mdf");
+
+            actionaction(textBox1);
+        }
+
+        private void actionaction(TextBox tb) {
+            tb.Text = "AlohaBitch";
+
         }
     }
 }

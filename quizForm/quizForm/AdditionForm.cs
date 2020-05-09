@@ -8,12 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
+using System.IO;
 
 namespace quizForm
 {
     public partial class AdditionForm : Form
     {
-        private SqlConnection connection = new SqlConnection(@"Data Source = (LocalDB)\MSSQLLocalDB; AttachDbFilename=E:\winforms\quizForm\quizForm\TryOut.mdf;Integrated Security = True");
+        private static string path = Path.Combine(Environment.CurrentDirectory, @"TryOut.mdf"); //path - we need const vars
+        private SqlConnection connection = new SqlConnection(@"Data Source = (LocalDB)\MSSQLLocalDB; AttachDbFilename="+path+";Integrated Security = True");
 
         private SqlCommand sqlCommand;
         private SqlDataReader dataReader;
@@ -22,7 +24,7 @@ namespace quizForm
 
         private String tableName = "Addition";
         private int activeAnswer = 0;
-        private int questionIndex;
+        private int questionId;
 
         public AdditionForm()
         {
@@ -36,10 +38,10 @@ namespace quizForm
         private void AdditionForm_Activated(object sender, EventArgs e)
         {
             label_anounce.Text = "Зроби свій вибір =) ";
-            questionIndex = GenerationOfQuestionIndex();
+            questionId = GenerationOfQuestionIndex();
 
-            FillTextBoxQuestion(questionIndex);
-            FillButtonsAnswers(questionIndex);
+            FillTextBoxQuestion(questionId);
+            FillButtonsAnswers(questionId);
 
         }
 
@@ -124,10 +126,10 @@ namespace quizForm
             }
             else {
                 label_anounce.Text = "Твоя відповідь прийнята =)";
-                StatisticalAnalyzer.CheckAnswer(tableName, questionIndex, activeAnswer); //correct-or-nonCorrect answer
+                StatisticalAnalyzer.CheckAnswer(tableName, questionId, activeAnswer); //correct-or-nonCorrect answer
                 activeAnswer = 0;
 
-                DisableQuestion(questionIndex); // update status of question
+                DisableQuestion(questionId); // update status of question
 
                 FormPicker.DempingManager(FormPicker.pickIndex); // update list of tables
                 //call new question
